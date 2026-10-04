@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沉默之狼｜短片 · 看见结构的人</title>
+    <style>
+        /* ========== 全局重置 & 电影色彩系统 ========== */
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{
+            --bg-base:#12171d;
+            --bg-mid:#1c242c;
+            --ac-warm:#d48b58;
+            --ac-text:#f2c294;
+            --text-main:#e6ebf0;
+            --text-deep:#c7d1da;
+            --text-mute:#7f92a3;
+        }
+        html{
+            scroll-behavior:smooth;
+        }
+        body{
+            font-family:"Noto Sans SC",system-ui,sans-serif;
+            background-color:var(--bg-base);
+            color:var(--text-deep);
+            line-height:1.95;
+            overflow-x:hidden;
+            background-image:
+                    radial-gradient(ellipse at 20% 10%,rgba(40,60,80,0.18),transparent 60%),
+                    radial-gradient(ellipse at 80% 70%,rgba(180,110,70,0.10),transparent 70%);
+            background-attachment:fixed;
+        }
+
+        /* 胶片颗粒噪点 */
+        body::before{
+            content:"";
+            position:fixed;
+            inset:0;
+            opacity:0.05;
+            pointer-events:none;
+            background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            z-index:-1;
+        }
+
+        /* 结构线背景装饰 */
+        body::after{
+            content:"";
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            opacity:0.05;
+            z-index:-2;
+            background-image:
+                    linear-gradient(rgba(242,194,148,0.35) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(242,194,148,0.35) 1px,transparent 1px);
+            background-size:60px 60px;
+            mask-image:radial-gradient(ellipse at center,black 40%,transparent 75%);
+        }
+
+        h1{
+            font-weight:300;
+            letter-spacing:0.24em;
+            color:#f4f1ec;
+            text-shadow:0 0 14px rgba(242,194,148,0.28), 0 2px 8px rgba(0,0,0,0.7);
+            filter:blur(0.2px);
+        }
+        h2{
+            font-weight:400;
+            letter-spacing:0.16em;
+            color:#e8eef3;
+            text-shadow:0 0 10px rgba(242,194,148,0.18), 0 2px 6px rgba(0,0,0,0.6);
+            filter:blur(0.15px);
+        }
+        h3{
+            font-weight:400;
+            letter-spacing:0.1em;
+            color:#eef4f8;
+            text-shadow:0 0 10px rgba(242,194,148,0.18);
+        }
+        p{
+            color:#d7e0e8;
+            text-shadow:0 1px 2px rgba(0,0,0,0.4);
+            filter:blur(0.08px);
+        }
+        strong{
+            color:#f1efe7;
+            text-shadow:0 0 4px rgba(242,194,148,0.2);
+        }
+        .mute{
+            color:#97aabb;
+            text-shadow:none;
+            filter:none;
+        }
+        .highlight{
+            color:#f2c294;
+            text-shadow:0 0 10px rgba(242,194,148,0.28),0 0 18px rgba(212,139,88,0.16);
+            filter:blur(0.12px);
+        }
+
+        /* 滚动入场动画 */
+        .fade-in-sec{
+            opacity:0;
+            transform:translateY(28px);
+            transition:opacity 0.85s ease, transform 0.85s ease;
+        }
+        .fade-in-sec.active{
+            opacity:1;
+            transform:translateY(0px);
+        }
+
+        /* 普通标题逐字显现 */
+        .char-reveal{
+            display:inline-block;
+            opacity:0;
+            filter:blur(6px);
+            transform:translateY(14px);
+            transition:opacity 1.1s ease,filter 1.1s ease,transform 1.1s ease,text-shadow 1.1s ease;
+        }
+        .char-reveal.visible{
+            opacity:1;
+            filter:blur(0.2px);
+            transform:translateY(0);
+        }
+        .char-reveal.visible.highlight{
+            text-shadow:0 0 12px rgba(242,194,148,0.38),0 0 26px rgba(212,139,88,0.24);
+        }
+
+        /* 主题句特殊动效：眼睛会骗人，但结构不会 */
+        .theme-word{
+            display:inline-block;
+            opacity:0;
+            filter:blur(7px);
+            transform:translateY(16px);
+            color:#f2c294;
+            text-shadow:0 2px 8px rgba(0,0,0,0.7);
+        }
+        .theme-part-1 .theme-word{
+            animation:themeAppear 1.4s ease forwards,themeGlow 1.2s ease 1.4s forwards,themeFade 1s ease 3.4s forwards;
+        }
+        .theme-part-2{
+            opacity:0;
+            animation:themePart2Start 4.6s ease forwards;
+        }
+        .theme-part-2 .theme-word{
+            animation:themeAppear 1.4s ease forwards;
+        }
+        @keyframes themeAppear{
+            0%{opacity:0;filter:blur(7px);transform:translateY(16px);}
+            100%{opacity:1;filter:blur(0.22px);transform:translateY(0);}
+        }
+        @keyframes themeGlow{
+            0%{text-shadow:0 2px 8px rgba(0,0,0,0.7);}
+            45%{text-shadow:0 0 16px rgba(242,194,148,0.5),0 0 36px rgba(212,139,88,0.3),0 2px 8px rgba(0,0,0,0.7);}
+            100%{text-shadow:0 0 8px rgba(242,194,148,0.26),0 0 18px rgba(212,139,88,0.14),0 2px 8px rgba(0,0,0,0.7);}
+        }
+        @keyframes themeFade{
+            0%{opacity:1;filter:blur(0.22px);}
+            100%{opacity:0.35;filter:blur(1.4px);}
+        }
+        @keyframes themePart2Start{
+            0%{opacity:0;}
+            100%{opacity:1;}
+        }
+
+        @media (prefers-reduced-motion:reduce){
+            .fade-in-sec{opacity:1;transform:none;transition:none;}
+            .char-reveal{opacity:1;filter:none;transform:none;transition:none;}
+            .theme-word{opacity:1;filter:none;transform:none;animation:none!important;}
+            .theme-part-2{opacity:1;animation:none;}
+            html{scroll-behavior:auto;}
+            .char-section{transition:none !important;}
+            .back-top,.side-nav{display:none !important;}
+            .progress-bar{display:none !important;}
+        }
+
+        /*==== 顶部滚动进度条 ====*/
+        .progress-bar{
+            position:fixed;
+            top:0;
+            left:0;
+            height:3px;
+            background:var(--ac-warm);
+            width:0%;
+            z-index:9999;
+            pointer-events:none;
+        }
+
+        /*==== 侧边章节导航（移动端隐藏） ====*/
+        .side-nav{
+            position:fixed;
+            top:50%;
+            right:24px;
+            transform:translateY(-50%);
+            z-index:900;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        }
+        .side-nav a{
+            color:var(--text-mute);
+            font-size:0.82rem;
+            text-decoration:none;
+            padding:4px 8px;
+            border-left:2px solid transparent;
+            transition:all 0.25s ease;
+        }
+        .side-nav a.active{
+            color:var(--ac-text);
+            border-left-color:var(--ac-warm);
+        }
+        @media(max-width:900px){
+            .side-nav{display:none;}
+        }
+
+        /*==== 回到顶部按钮 ====*/
+        .back-top{
+            position:fixed;
+            bottom:28px;
+            right:28px;
+            width:44px;
+            height:44px;
+            border-radius:50%;
+            background:rgba(var(--bg-mid),0.75);
+            border:1px solid rgba(var(--ac-warm),0.22);
+            color:var(--ac-text);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:1.2rem;
+            z-index:900;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity 0.3s ease;
+        }
+        .back-top.show{
+            opacity:1;
+            pointer-events:auto;
+        }
+
+        /* 封面全屏视口 */
+        .cover-hero{
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            text-align:center;
+            padding:2rem;
+            position:relative;
+        }
+        .cover-bg{
+            position:absolute;inset:0;
+            background-image:url("images/poster.png");
+            background-size:cover;
+            background-position:center;
+            opacity:0.42;
+            z-index:-1;
+        }
+        .cover-hero::after{
+            content:"";
+            position:absolute;inset:0;
+            background:linear-gradient(to bottom,rgba(18,23,29,0.55),rgba(18,23,29,0.72) 60%,#12171d);
+            z-index:0;
+        }
+
+        /* 眼睛轮廓 + 结构网格主题装饰 */
+        .cover-theme{
+            position:absolute;
+            inset:0;
+            z-index:1;
+            pointer-events:none;
+            opacity:0.55;
+        }
+        .cover-theme .eye-outline{
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            width:min(520px,78vw);
+            aspect-ratio:1/0.34;
+            border:1px solid rgba(242,194,148,0.28);
+            border-radius:50%;
+            box-shadow:inset 0 0 40px rgba(242,194,148,0.10),0 0 28px rgba(242,194,148,0.08);
+        }
+        .cover-theme .eye-outline::before{
+            content:"";
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            width:14px;
+            height:14px;
+            border-radius:50%;
+            background:rgba(242,194,148,0.55);
+            box-shadow:0 0 18px rgba(242,194,148,0.45);
+        }
+        .cover-theme .structure-grid{
+            position:absolute;
+            left:0;right:0;bottom:18%;
+            height:120px;
+            background-image:linear-gradient(rgba(242,194,148,0.22) 1px,transparent 1px),linear-gradient(90deg,rgba(242,194,148,0.22) 1px,transparent 1px);
+            background-size:44px 44px;
+            mask-image:linear-gradient(to top,black 40%,transparent 100%);
+        }
+        .cover-theme .field-lines{
+            position:absolute;
+            left:0;right:0;bottom:12%;
+            height:80px;
+            background:repeating-linear-gradient(90deg,rgba(242,194,148,0.16) 0 2px,transparent 2px 120px);
+            mask-image:linear-gradient(to top,black 30%,transparent 100%);
+        }
+
+        .cover-content{
+            position:relative;
+            z-index:2;
+        }
+
+        /* 署名预留标记区：明显但不抢标题 */
+        .cover-author{
+            position:absolute;
+            bottom:82px;
+            left:50%;
+            transform:translateX(-50%);
+            z-index:2;
+            padding:10px 18px;
+            border:1px dashed rgba(242,194,148,0.45);
+            border-radius:4px;
+            background:rgba(242,194,148,0.06);
+            color:#d7e0e8;
+            font-size:0.95rem;
+            letter-spacing:0.08em;
+        }
+        .cover-author-label{
+            display:block;
+            color:#f2c294;
+            font-size:0.78rem;
+            margin-bottom:4px;
+            letter-spacing:0.14em;
+        }
+
+        .scroll-hint{
+            position:absolute;
+            bottom:36px;
+            left:50%;
+            transform:translateX(-50%);
+            color:#97aabb;
+            font-size:0.9rem;
+            z-index:2;
+            letter-spacing:0.12em;
+        }
+
+        /* 转场淡入分隔块 */
+        .trans-divider{
+            height:140px;
+            background:linear-gradient(to bottom,transparent,var(--bg-mid),transparent);
+            pointer-events:none;
+        }
+
+        /* ==========人物区块｜移除sticky，保留全部图片视觉效果 ========== */
+        .char-section{
+            max-width:1200px;
+            margin:0 auto 140px auto;
+            padding:0 24px;
+            display:grid;
+            grid-template-columns:minmax(340px,520px) 1fr;
+            gap:40px;
+            align-items:start;
+            transition:transform 0.28s ease,box-shadow 0.28s ease,border-color 0.28s ease;
+        }
+        .char-section:hover{
+            transform:translateY(-4px);
+        }
+        .char-img-wrap{
+            top:auto;
+            position:relative;
+            aspect-ratio:3/4;
+            overflow:hidden;
+            border-radius:4px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.55),0 0 0 1px rgba(242,194,148,0.08);
+        }
+        /* 镜头暗角保留 */
+        .char-img-wrap::after{
+            content:"";
+            position:absolute;
+            inset:0;
+            pointer-events:none;
+            box-shadow:inset 0 0 60px 14px rgba(0,0,0,0.45);
+        }
+        .char-img-wrap img{
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            object-position:center center;
+            filter:contrast(0.92) saturate(0.88);
+            transition:filter 0.3s ease;
+        }
+        .char-section:hover .char-img-wrap img{
+            filter:contrast(0.96) saturate(0.92);
+        }
+        .char-section:hover .char-img-wrap{
+            box-shadow:0 14px 44px rgba(0,0,0,0.6),0 0 0 1px rgba(var(--ac-warm),0.32),0 0 22px rgba(var(--ac-warm),0.14);
+        }
+        .char-text h2{
+            margin-bottom:14px;
+        }
+        .char-text > p{
+            margin-bottom:18px;
+        }
+        .char-quote-block{
+            margin-top:32px;
+            padding:18px 22px;
+            border-left:2px solid var(--ac-warm);
+            background:rgba(212,139,88,0.07);
+        }
+
+        /*==== 预告片容器样式 ====*/
+        .trailer-wrap{
+            max-width:1040px;
+            margin:0 auto 100px auto;
+            padding:0 24px;
+        }
+        .trailer-box{
+            background:rgba(var(--bg-mid),0.55);
+            border-radius:6px;
+            border:1px solid rgba(var(--ac-warm),0.18);
+            padding:24px;
+            box-shadow:0 8px 32px rgba(0,0,0,0.4);
+        }
+        .video-container{
+            width:100%;
+            aspect-ratio:16 / 9;
+            background:#000000;
+            border-radius:4px;
+            overflow:hidden;
+        }
+        .video-container video,.video-container iframe{
+            width:100%;
+            height:100%;
+            border:none;
+        }
+
+        /* 分镜单元 */
+        .shot-unit{
+            background:rgba(var(--bg-mid),0.55);
+            padding:22px 26px;
+            margin-bottom:22px;
+            border-radius:4px;
+            border-left:2px solid rgba(var(--ac-warm),0.25);
+            box-shadow:0 6px 24px rgba(0,0,0,0.35);
+        }
+        .time-tag{
+            color:var(--ac-text);
+            font-weight:500;
+            letter-spacing:0.06em;
+            text-shadow:0 0 10px rgba(242,194,148,0.22);
+        }
+
+        /* 金句大引用 */
+        .big-quote{
+            max-width:860px;
+            margin:42px auto;
+            padding:32px 36px;
+            text-align:center;
+            font-size:1.4rem;
+            line-height:2.2;
+            color:#f2c294;
+            text-shadow:0 0 16px rgba(242,194,148,0.32),0 0 40px rgba(212,139,88,0.22),0 2px 10px rgba(0,0,0,0.8);
+            filter:blur(0.22px);
+        }
+
+        /* 彩蛋区域 */
+        .easter-egg-section{
+            max-width:960px;
+            margin:0 auto 100px auto;
+            padding:40px 24px;
+            text-align:center;
+            border-top:1px solid rgba(242,194,148,0.18);
+            border-bottom:1px solid rgba(242,194,148,0.18);
+        }
+        .easter-egg-title{
+            display:inline-block;
+            padding:8px 14px;
+            border:1px dashed rgba(242,194,148,0.45);
+            border-radius:4px;
+            color:#f2c294;
+            font-size:0.9rem;
+            letter-spacing:0.2em;
+            margin-bottom:18px;
+        }
+        .easter-egg-hint{
+            color:#97aabb;
+            font-size:0.95rem;
+            margin-bottom:24px;
+        }
+        .easter-egg-box{
+            background:rgba(var(--bg-mid),0.55);
+            border:1px solid rgba(var(--ac-warm),0.18);
+            border-radius:6px;
+            padding:24px;
+            box-shadow:0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        /* 下载区块 */
+        .download-box{
+            max-width:720px;
+            margin:80px auto;
+            padding:32px 28px;
+            text-align:center;
+            background:rgba(var(--bg-mid),0.6);
+            border-radius:4px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.45);
+        }
+        .btn-doc{
+            display:inline-block;
+            margin-top:20px;
+            padding:12px 28px;
+            border:1px solid var(--ac-warm);
+            color:var(--ac-text);
+            text-decoration:none;
+            letter-spacing:0.1em;
+            transition:background-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .btn-doc:hover{
+            background-color:rgba(var(--ac-warm),0.14);
+            box-shadow:0 0 18px rgba(242,194,148,0.22);
+        }
+
+        /* 移动端 */
+        @media(max-width:860px){
+            .char-section{
+                grid-template-columns:1fr;
+            }
+            .char-img-wrap{
+                position:relative;
+                margin-bottom:24px;
+            }
+            h1{
+                font-size:1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="progress-bar"></div>
+
+<!-- 侧边导航 -->
+<nav class="side-nav">
+    <a href="#sec-cover" data-target="sec-cover">封面</a>
+    <a href="#sec-char" data-target="sec-char">人物</a>
+    <a href="#sec-world" data-target="sec-world">故事</a>
+    <a href="#sec-trailer" data-target="sec-trailer">预告片</a>
+    <a href="#sec-shot" data-target="sec-shot">分镜</a>
+    <a href="#sec-quote" data-target="sec-quote">金句</a>
+    <a href="#sec-egg" data-target="sec-egg">彩蛋</a>
+    <a href="#sec-down" data-target="sec-down">下载</a>
+</nav>
+
+<a href="#sec-cover" class="back-top">↑</a>
+
+<!-- 【0 封面全屏序幕】 -->
+<section id="sec-cover" class="cover-hero fade-in-sec">
+    <div class="cover-bg"></div>
+    <div class="cover-theme" aria-hidden="true">
+        <div class="eye-outline"></div>
+        <div class="structure-grid"></div>
+        <div class="field-lines"></div>
+    </div>
+    <div class="cover-content">
+        <h1><span class="char-reveal">沉默之狼</span></h1>
+        <p style="margin-top:14px;font-size:1.1rem;" class="mute"><span class="char-reveal">短片 · 看见结构的人</span></p>
+        <p style="margin-top:22px;font-size:1.25rem;line-height:2.4;">
+            <span class="theme-part-1"><span class="theme-word">眼</span><span class="theme-word">睛</span><span class="theme-word">会</span><span class="theme-word">骗</span><span class="theme-word">人</span><span class="theme-word">。</span></span>
+            <span class="theme-part-2"><span class="theme-word">结</span><span class="theme-word">构</span><span class="theme-word">不</span><span class="theme-word">会</span><span class="theme-word">。</span></span>
+        </p>
+    </div>
+
+    <!-- ========== 【署名预留位置：请在这里填入你的名字】 ========== -->
+    <div class="cover-author">
+        <span class="cover-author-label">— 创作署名 · 请填写 —</span>
+        <!-- 下方示例文字请替换成你的名字，例如：Created by 你的名字 -->
+        <span>Created by 你的名字</span>
+    </div>
+
+    <div class="scroll-hint">向下滚动 开始阅读 ↓</div>
+</section>
+
+<div class="trans-divider"></div>
+
+<!-- 陈知白 -->
+<section id="sec-char" class="char-section fade-in-sec">
+    <div class="char-img-wrap">
+        <img src="images/chenzhibai.png" alt="陈知白">
+    </div>
+    <div class="char-text">
+        <h2><span class="char-reveal">🐺 陈知白｜影子 → 天狼</span></h2>
+        <p class="mute">17岁 · 高二 · 8号中场｜马来西亚华裔</p>
+
+        <p>拥有特殊天赋「结构视角」，能够预判场上短时间内的跑动走向。这份能力会带来记忆碎片化的代价，一部分代价由哥哥替他承担。</p>
+
+        <p>身形清瘦，一缕发丝轻遮住右眼。故事前期很少露出完整正脸，常穿着偏大的深蓝色8号球衣。</p>
+
+        <p>性格内敛寡言，习惯用行动代替言语。洞察力出众，但不被身边人理解，慢慢成长为队伍里值得信赖的存在，被远方的神秘势力留意。</p>
+
+        <div class="char-quote-block">
+            <p class="highlight"><span class="char-reveal highlight">足球，看的不是眼前，是结构。</span></p>
+        </div>
+    </div>
+</section>
+
+<!-- 苏念 -->
+<section class="char-section fade-in-sec">
+    <div class="char-img-wrap">
+        <img src="images/sunian.png" alt="苏念">
+    </div>
+    <div class="char-text">
+        <h2><span class="char-reveal">📷 苏念｜场外观众</span></h2>
+        <p class="mute">16岁 · 高二文商班｜校刊摄影、图书馆管理员</p>
+
+        <p>转学生，随身带着父亲遗留的胶片相机。悄悄写下关心的字条，旧胶卷里藏着关于陈知夜的往事。</p>
+
+        <p>齐肩黑发束成低马尾，发尾微卷，相机常常挂在颈间。故事前期，她的形象总带着一层朦胧感。</p>
+
+        <p>外表开朗，内心细腻克制。不擅长直白表达心意，习惯用镜头默默观察记录，把情绪藏在安静的陪伴之中。</p>
+
+        <div class="char-quote-block">
+            <p class="highlight"><span class="char-reveal highlight">又没好好吃饭？球踢得那么好，饭也要好好吃。——你的场外观众</span></p>
+        </div>
+    </div>
+</section>
+
+<!-- 陈知夜 -->
+<section class="char-section fade-in-sec">
+    <div class="char-img-wrap">
+        <img src="images/chenzhiye.png" alt="陈知夜">
+    </div>
+    <div class="char-text">
+        <h2><span class="char-reveal">🌙 陈知夜｜代价自愿承担者</span></h2>
+        <p class="mute">20‑21岁｜华裔 · 陈知白亲哥哥</p>
+
+        <p>也曾觉醒过结构视角，主动选择放弃天赋，自愿承受对应的代价。拥有属于自己的生活轨迹，将在故事第七章正式登场。</p>
+
+        <p>眉眼和弟弟有相似轮廓，但神态自成气质。短发完全露出眉眼，眼底带着挥之不去的倦意。日常多穿着朴素的旧衬衫与深色外套，气质沉静疏离。</p>
+
+        <p>性格温柔隐忍，长久承受身体带来的损耗；悲伤与苦楚大多收敛于神态之间，很少有激烈崩溃的时刻，是揭开天赋背后代价真相的关键人物。</p>
+
+        <div class="char-quote-block">
+            <p class="highlight"><span class="char-reveal highlight">你踢你的。我看得见。</span></p>
+        </div>
+    </div>
+</section>
+
+<!-- Ariff Aimran -->
+<section class="char-section fade-in-sec">
+    <div class="char-img-wrap">
+        <img src="images/ariff.png" alt="Ariff Aimran">
+    </div>
+    <div class="char-text">
+        <h2><span class="char-reveal">🎙️ Ariff Aimran｜主队主教练</span></h2>
+        <p class="mute">46岁｜马来裔 · 昔日天赋持有者</p>
+
+        <p>曾经同样拥有结构视角，被神秘势力关注。伤病终结了他的球员生涯之后，回到华文独立中学执教，默默观察、试探，守护着陈知白。</p>
+
+        <p>日晒深棕肤色，短发夹杂银丝。常穿深蓝色Polo，胸前银色口哨；常常双臂交叉抱胸，安静站在场边注视赛场。</p>
+
+        <p>冷静内敛，看透赛场与人的内心，不会轻易摊开所有秘密，愿意留给少年自我探寻与成长的空间，知晓许多关于天赋与那股神秘势力的往事。</p>
+
+        <div class="char-quote-block">
+            <p class="highlight"><span class="char-reveal highlight">看来……终于还是来了。</span></p>
+        </div>
+    </div>
+</section>
+
+<div class="trans-divider"></div>
+
+<!-- 故事世界观与梗概 -->
+<section id="sec-world" class="fade-in-sec" style="max-width:960px;margin:0 auto;padding:0 24px 100px;">
+    <h2 style="text-align:center;margin-bottom:28px;"><span class="char-reveal">故事世界</span></h2>
+    <p>故事发生在雨季的吉隆坡华文独立中学。雨后足球场，积水看台与草木，处处笼罩薄雾。</p>
+    <p>少年陈知白拥有推演赛场走向的特殊天赋，这份能力伴随沉重代价。哥哥为他分担一部分痛苦。苏念悄悄观察记录。曾经拥有天赋的教练在暗处守护少年。</p>
+    <p>一股神秘势力只在远方进行窥探。本篇章冲突停留在暗流与对峙，不出现直白的暴力交锋，整个故事交织亲情、遗憾、隐忍的少年成长。</p>
+</section>
+
+<div class="trans-divider"></div>
+
+<!-- ==========预告片位置｜本地mp4视频 ========== -->
+<section id="sec-trailer" class="trailer-wrap fade-in-sec">
+    <div class="trailer-box">
+        <h2 style="text-align:center;margin-bottom:20px;"><span class="char-reveal">官方预告片</span></h2>
+        <div class="video-container">
+            <video src="video/trailer.mp4" controls preload="metadata" poster="images/poster.png">
+                你的浏览器不支持视频播放
+            </video>
+        </div>
+    </div>
+</section>
+
+<div class="trans-divider"></div>
+
+<!-- 30秒概念预告 · 完整分镜 -->
+<section id="sec-shot" class="fade-in-sec" style="max-width:1040px;margin:0 auto;padding:0 24px 100px;">
+    <h2 style="text-align:center;margin-bottom:32px;"><span class="char-reveal">30秒概念预告 · 完整分镜</span></h2>
+    <div class="shot-unit">
+        <div class="time-tag">镜头1｜00:00‑00:05｜破水‑助攻‑破门</div>
+        <p>雨后冷调球场。皮球划过空气撞向积水，溅起细碎水花。陈知白送出地面直塞，队友完成破门。人群为之欢呼，而送出助攻的陈知白却被淹没在喧嚣之中。远景完整保留两队球员、教练组、看台零星虚化人影。</p>
+        <p class="mute">旁白：如果有人问我，足球是什么。</p>
+    </div>
+    <div class="shot-unit">
+        <div class="time-tag">镜头2｜00:05‑00:11｜逆势前插，全队误解</div>
+        <p>比赛对抗，主队全员回撤防守，只有陈知白向前寻找空档。红蓝两队球员交错跑动，场边教练、替补席、看台全部远景虚化。</p>
+        <p class="mute">旁白：以前我以为足球，不过就是球、草地、球门、进球。可后来我才慢慢想通，不完全是这样。足球，看的不是眼前，是结构。</p>
+    </div>
+    <div class="shot-unit">
+        <div class="time-tag">镜头3｜00:11‑00:18｜结构视角主观镜头</div>
+        <p>陈知白第一人称视角；多条极细半透淡白色推演分支轨迹浮现；一条随场上动作逐步清晰，其余淡化；线条贴地，旁人看不见，没有界面图标与箭头。</p>
+    </div>
+    <div class="shot-unit">
+        <div class="time-tag">镜头4｜00:18‑00:24｜教练凝视，色调单向渐变</div>
+        <p>长焦对准Ariff，双臂交叉抱胸凝视场内陈知白。背景赛场持续比赛。画面色温由冷青灰平缓过渡到暖橙夕照，积水反射晚霞。</p>
+        <p class="mute">旁白：场边只有教练，没有鼓掌。他就那样一直看着我。我低头看自己，我真的太瘦了。</p>
+    </div>
+    <div class="shot-unit">
+        <div class="time-tag">镜头5｜00:24‑00:30｜纸条、闪回、片尾收束</div>
+        <p>主观视角手触碰口袋内潮湿纸条；多组短促柔和叠化闪回：纸条特写、看台模糊人影、苏念相机虚影；一道转瞬即逝的画面掠过：看台之外，陈知夜站在逆光之中。画面缓缓向纯黑叠化；浮现金句<span class="highlight">眼睛会骗人。结构不会。</span>；黑暗之中浮现片名《沉默之狼》。</p>
+        <p class="mute">旁白：纸条？不是我的字。……忘了什么？</p>
+    </div>
+</section>
+
+<div class="trans-divider"></div>
+
+<!-- 金句独白区 -->
+<section id="sec-quote" class="fade-in-sec">
+    <div class="big-quote"><span class="char-reveal highlight">眼睛会骗人。结构不会。</span></div>
+    <div class="big-quote"><span class="char-reveal highlight">你往亮的地方踢。</span></div>
+    <div class="big-quote"><span class="char-reveal highlight">夜，我见过。你别来。</span></div>
+</section>
+
+<div class="trans-divider"></div>
+
+<!-- ========== 【彩蛋区域】预留 ========== -->
+<section id="sec-egg" class="easter-egg-section fade-in-sec">
+    <h2 class="easter-egg-title"><span class="char-reveal">· 彩蛋 ·</span></h2>
+    <p class="easter-egg-hint">这里预留为隐藏细节、幕后线索或额外互动内容区域。</p>
+    <div class="easter-egg-box">
+        <!-- 彩蛋内容后续填在这里 -->
+        <p class="mute">彩蛋区域待补充</p>
+    </div>
+</section>
+
+<div class="trans-divider"></div>
+
+<!-- 档案下载收尾 -->
+<section id="sec-down" class="fade-in-sec">
+    <div class="download-box">
+        <h3><span class="char-reveal">短片设定档案</span></h3>
+        <p class="mute" style="margin-top:10px;">本网页为阅读展示版本。完整工程文档包含全部分镜、音频参考、创作备注。</p>
+        <a class="btn-doc" href="files/沉默之狼_V5.5_完整总档案.docx">下载 设定档案.docx</a>
+    </div>
+</section>
+
+<script>
+    (function(){
+        // 页面载入强制回到页面最顶端，不会停留在中间
+        window.scrollTo(0, 0);
+
+        const els = document.querySelectorAll('.fade-in-sec');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const progressBar = document.querySelector('.progress-bar');
+        const backTopBtn = document.querySelector('.back-top');
+        const sideLinks = document.querySelectorAll('.side-nav a');
+        const sections = ['sec-cover','sec-char','sec-world','sec-trailer','sec-shot','sec-quote','sec-egg','sec-down'];
+
+        if(reduceMotion){
+            els.forEach(el=>el.classList.add('active'));
+            document.querySelectorAll('.char-reveal').forEach(el=>el.classList.add('visible'));
+            return;
+        }
+
+        const io = new IntersectionObserver((entries)=>{
+            entries.forEach(entry=>{
+                if(entry.isIntersecting){
+                    entry.target.classList.add('active');
+                    io.unobserve(entry.target);
+                }
+            })
+        },{threshold:0.12});
+
+        els.forEach(el=>io.observe(el));
+
+        const revealElements = document.querySelectorAll('.char-reveal');
+        revealElements.forEach(el=>{
+            const text = el.innerText;
+            el.innerHTML = "";
+            [...text].forEach((char,i)=>{
+                const span = document.createElement('span');
+                span.innerText = char;
+                span.style.transitionDelay = (i*0.04)+"s";
+                span.classList.add('char-reveal');
+                if(el.classList.contains('highlight')) span.classList.add('highlight');
+                el.appendChild(span);
+            })
+        });
+
+        const revealObserver = new IntersectionObserver((entries)=>{
+            entries.forEach(entry=>{
+                if(entry.isIntersecting){
+                    entry.target.querySelectorAll('.char-reveal').forEach((span,i)=>{
+                        setTimeout(()=>span.classList.add('visible'),i*60);
+                    });
+                    revealObserver.unobserve(entry.target);
+                }
+            })
+        },{threshold:0.35});
+
+        document.querySelectorAll('.cover-content, .char-text, .download-box, .big-quote, .trailer-box, .easter-egg-section').forEach(el=>revealObserver.observe(el));
+
+        window.addEventListener('scroll',()=>{
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.style.width = (scrollTop/docHeight*100)+"%";
+            backTopBtn.classList.toggle('show',scrollTop>350);
+            let currentSec = "sec-cover";
+            for(const sid of sections){
+                const dom = document.getElementById(sid);
+                if(dom && scrollTop + window.innerHeight*0.35 >= dom.offsetTop) currentSec = sid;
+            }
+            sideLinks.forEach(link=>link.classList.toggle('active',link.dataset.target===currentSec));
+        });
+    })();
+</script>
+
+</body>
+</html>
