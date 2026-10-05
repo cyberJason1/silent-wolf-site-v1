@@ -1,0 +1,11 @@
+# JetBrains IDE folder
+.idea/
+
+# Office documents
+*.docx
+*.doc
+*.pdf
+
+# OS system files
+.DS_Store
+Thumbs.db
